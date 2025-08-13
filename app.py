@@ -4,24 +4,25 @@ from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 import psycopg2
-from datetime import datetime
+from datetime import datetime, date
 import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-# ==== CONFIG BDD ====
+# CONFIGURATION DE LA BASE DE DONNÉES
 DB_NAME = 'beac'
 DB_USER = 'legane'
 DB_PASSWORD = 'legane19'
 DB_HOST = 'localhost'
 DB_PORT = 5432
 
-# ==== CONFIG EMAIL ====
+#  CONFIGURATION DE L'ENVOI D'EMAIL
 SEND_EMAIL = "yousseucabrel@gmail.com"
 PWD = "wybcgmbzcsnthmcu"
 RECEIVE_EMAIL = "cabrelyousseu6@gmail.com"
 
+# Création de l'application FastAPI
 app = FastAPI()
 
 app.add_middleware(
@@ -41,6 +42,7 @@ class TauxResponse(BaseModel):
     taux: list[Taux]
 
 def recuperer_taux():
+    # Connexion à la base PostgreSQL
     conn = psycopg2.connect(
         dbname=DB_NAME,
         user=DB_USER,
@@ -60,6 +62,10 @@ def recuperer_taux():
         match = re.search(r'Date de valeur : (\d{2}/\d{2}/\d{4})', date_div.text)
         if match:
             date_valeur = datetime.strptime(match.group(1), '%d/%m/%Y').date()
+
+    # Modification : date du jour si date_valeur est None
+    if date_valeur is None:
+        date_valeur = date.today()
 
     documents = soup.find_all('div', class_='document')
 
